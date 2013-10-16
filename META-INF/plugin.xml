@@ -1,0 +1,45 @@
+<idea-plugin version="2">
+  <id>com.yonilevy.codeaging</id>
+  <name>Code Aging</name>
+  <version>0.1</version>
+  <vendor email="yonilevy@gmail.com" url="https://github.com/yonilevy">Yoni Levy</vendor>
+
+  <description><![CDATA[
+      Colors lines of code according to their age in source control.<br><br>
+      Use Ctrl+\ to toggle code aging on the currently opened file.
+      ]]></description>
+
+  <change-notes><![CDATA[
+        0.1 - Initial version
+      ]]>
+  </change-notes>
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+  <idea-version since-build="107.105"/>
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+       on how to target different products -->
+  <depends>com.intellij.modules.lang</depends>
+
+  <application-components>
+    <!-- Add your application components here -->
+  </application-components>
+
+  <project-components>
+    <!-- Add your project components here -->
+  </project-components>
+
+  <actions>
+    <!-- Add your actions here -->
+    <action id="CodeAgingAction"
+            class="com.yonilevy.codeaging.CodeAgingAction"
+            text="Code Aging"
+            description="Visualize code age">
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl BACK_SLASH"/>
+    </action>
+  </actions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+  </extensions>
+</idea-plugin>
