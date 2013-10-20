@@ -23,6 +23,9 @@ public class CodeAgingAction extends AnAction {
             Project project = event.getData(PlatformDataKeys.PROJECT);
             VirtualFile virtualFile = event.getData(PlatformDataKeys.VIRTUAL_FILE);
 
+            if (editor == null) {
+                return;
+            }
             toggleHighlights(editor, editor.getDocument(), project, virtualFile);
         } catch (Exception e) {
             log.error("CodeAging Exception", e);
