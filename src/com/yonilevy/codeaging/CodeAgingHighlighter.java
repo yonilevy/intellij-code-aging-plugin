@@ -35,7 +35,7 @@ public class CodeAgingHighlighter {
 
     public List<RangeHighlighter> highlight() throws VcsException {
         int numLines = document.getLineCount();
-        List<Float> normalizedAges = calcNormalizedLineAges(numLines);
+        List<Float> normalizedAges = calcNormalizedLineGeneration(numLines);
 
         List<RangeHighlighter> highlighters = Lists.newArrayList();
         for (int currentLine = 0 ; currentLine < numLines ; ++currentLine) {
@@ -45,8 +45,8 @@ public class CodeAgingHighlighter {
         return highlighters;
     }
 
-    private List<Float> calcNormalizedLineAges(int numLines) throws VcsException {
-        return normalizeLineAges(calcLineAges(getLineDates(numLines)));
+    private List<Float> calcNormalizedLineGeneration(int numLines) throws VcsException {
+        return normalizeLineGenerations(getLineDates(numLines));
     }
 
     private RangeHighlighter highlightLine(int currentLine,
@@ -57,11 +57,17 @@ public class CodeAgingHighlighter {
         return editor.getMarkupModel().addLineHighlighter(currentLine, HighlighterLayer.ADDITIONAL_SYNTAX, attr);
     }
 
-    private List<Float> normalizeLineAges(List<Long> lineAges) {
-        final Long maxAge = Collections.max(lineAges);
-        return Lists.newArrayList(Collections2.transform(lineAges, new Function<Long, Float>() {
-            public Float apply(Long age) {
-                return maxAge == 0 ? 1f : (float) age / maxAge;
+    private List<Float> normalizeLineGenerations(List<Date> lineDates) {
+        List<Date> sortedLineDates = Lists.newArrayList(Sets.newHashSet(lineDates));
+        Collections.sort(sortedLineDates);
+        final Map<Date, Float> dateToDateNormalized = Maps.newHashMap();
+        for (int i = 0 ; i < sortedLineDates.size() ; ++i) {
+            int divisor = sortedLineDates.size() - 1;
+            dateToDateNormalized.put(sortedLineDates.get(i), (float) i / (divisor == 0 ? 1 : divisor));
+        }
+        return Lists.newArrayList(Collections2.transform(lineDates, new Function<Date, Float>() {
+            public Float apply(Date date) {
+                return dateToDateNormalized.get(date);
             }
         }));
     }
@@ -83,16 +89,6 @@ public class CodeAgingHighlighter {
 
                 Date lineDate = annotation.getLineDate(headLineNum);
                 return lineDate == null ? now : lineDate;
-            }
-        }));
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private List<Long> calcLineAges(List<Date> lineDates) {
-        final Date maxLineDate = Collections.max(lineDates);
-        return Lists.newArrayList(Collections2.transform(lineDates, new Function<Date, Long>() {
-            public Long apply(Date lineDate) {
-                return maxLineDate.getTime() - lineDate.getTime();
             }
         }));
     }
