@@ -17,7 +17,8 @@ public class CodeAgingAction extends AnAction {
     private final Map<Document, List<RangeHighlighter>> highlighters = Maps.newHashMap();
 
     @SuppressWarnings("ConstantConditions")
-    @Override public void actionPerformed(AnActionEvent event) {
+    @Override
+    public void actionPerformed(AnActionEvent event) {
         try {
             Editor editor = event.getData(PlatformDataKeys.EDITOR);
             Project project = event.getData(PlatformDataKeys.PROJECT);

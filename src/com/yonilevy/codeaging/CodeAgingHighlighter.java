@@ -12,25 +12,29 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.JBColor;
 import com.intellij.vcsUtil.VcsUtil;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class CodeAgingHighlighter {
 
-    private static final float BRIGHTNESS_MIN = 0.2f;
-    private static final float BRIGHTNESS_MAX = 0.6f;
-    private static final float HUE = 0.145f;
-    private static final float SATURATION = 0.188f;
+    private static final float BRIGHTNESS_VARIATION = 0.5f;
 
     private final Project project;
     private final Editor editor;
     private final Document document;
     private final VirtualFile virtualFile;
+    private final ColorHSB editorBGColor;
 
-    public CodeAgingHighlighter(Project project, Editor editor, Document document, VirtualFile virtualFile) {
+    public CodeAgingHighlighter(Project project,
+                                Editor editor,
+                                Document document,
+                                VirtualFile virtualFile) {
         this.project = project;
         this.editor = editor;
         this.document = document;
         this.virtualFile = virtualFile;
+        editorBGColor = getEditorBGColor();
     }
 
     public List<RangeHighlighter> highlight() throws VcsException {
@@ -51,9 +55,16 @@ public class CodeAgingHighlighter {
 
     private RangeHighlighter highlightLine(int currentLine,
                                            Float brightnessCoefficient) {
-        float brightness = (brightnessCoefficient * (BRIGHTNESS_MAX - BRIGHTNESS_MIN)) + BRIGHTNESS_MIN;
+        boolean isDark = isEditorBGDark();
+        if (isDark) {
+            brightnessCoefficient = 1 - brightnessCoefficient;
+        }
+        float brightnessMin = isDark ? editorBGColor.getBrightness() : editorBGColor.getBrightness() - BRIGHTNESS_VARIATION;
+        float brightnessMax = isDark ? editorBGColor.getBrightness() + BRIGHTNESS_VARIATION : editorBGColor.getBrightness();
+        float brightness = (brightnessCoefficient * (brightnessMax - brightnessMin)) + brightnessMin;
+
         TextAttributes attr = new TextAttributes();
-        attr.setBackgroundColor(JBColor.getHSBColor(HUE, SATURATION, brightness));
+        attr.setBackgroundColor(JBColor.getHSBColor(editorBGColor.getHue(), editorBGColor.getSaturation(), brightness));
         return editor.getMarkupModel().addLineHighlighter(currentLine, HighlighterLayer.ADDITIONAL_SYNTAX, attr);
     }
 
@@ -91,5 +102,16 @@ public class CodeAgingHighlighter {
                 return lineDate == null ? now : lineDate;
             }
         }));
+    }
+
+    private ColorHSB getEditorBGColor() {
+        int rgb = editor.getColorsScheme().getDefaultBackground().getRGB();
+        float[] hsbValues = new float[3];
+        Color.RGBtoHSB((rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff, hsbValues);
+        return new ColorHSB(hsbValues[0], hsbValues[1], hsbValues[2]);
+    }
+
+    private boolean isEditorBGDark() {
+        return editorBGColor.getBrightness() < 0.5;
     }
 }
